@@ -1,0 +1,976 @@
+springcloud：分布式微服务架构的一站式解决方案，是多种微服务架构落地技术的集合体。
+	需要满足的技术实现：
+		1、服务注册与发现
+		2、服务调用
+		3、服务熔断
+		4、负载均衡
+		5、服务降级
+		6、服务消息队列
+		7、配置中心管理
+		8、服务网关
+		9、服务监控
+		10、全链路追踪
+		11、自动化构建部署
+		12、服务定时任务调度操作
+		
+maven中dependencyManagement标签和dependencies标签的区别
+	dependencyManagement：
+		1、往往用在父级pom中，用于声明全项目的jar包版本
+		2、不进行实际的jar包引入操作
+		3、子级pom想要引入特定的jar包版本，需要在version标签中指定具体版本号
+		
+lombak(需要导入jar,ide中也需要导入插件[idea中需要勾上settings -> build -> Annotation Processors -> enable annotation processing])
+	@Data注解 
+		注解在类上, 为类提供读写属性(get() set() 方法), 此外还提供了 equals()、hashCode()、toString() 方法
+	@NoArgsConstructor
+		为类提供无参构造函数
+	@AllArgsConstructor 
+		为类提供全参构造函数
+		
+项目热部署功能开启步骤
+	1、工程pom文件中添加：
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-devtools</artifactId>
+		    <scope>runtime</scope>
+		    <optional>true</optional>
+		</dependency>
+	2、父工程pom文件中添加：
+		<build>
+			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<fork>true</fork>
+						<addResources>true</addResources>
+					</configuration>
+				</plugin>
+			</plugins>
+		</build>
+	3、Enabling automatic build
+		idea -> settings -> build -> Compiler -> Automatically show... 勾上
+		idea -> settings -> build -> Compiler -> Display notificati... 勾上
+		idea -> settings -> build -> Compiler -> Build project auto... 勾上
+		idea -> settings -> build -> Compiler -> Compiler independe... 勾上
+	4、Update the value of
+		在工程中按下快捷键 ctrl + shift + alt + / 
+		选择Registry
+		勾中compiler.automake.allow.when.app.running
+	5、重启idea
+	
+@RequestBody注解
+	在使用RestTemplate进行远程接口调用时，接受调用的controller接口的入参需要加上@RequestBody注解
+	
+			
+Spring Boot Actuator:健康检查
+	http://localhost:8080/actuator/health 显示应用的健康状态(UP:健康)
+	
+CAP原则
+	又称CAP定理，指的是在一个分布式系统中， Consistency（一致性）、 Availability（可用性）、Partition tolerance（分区容错性），三者不可得兼，三者要么AP，要么CP，要AC。
+	
+Eureka
+	Eureka服务注册与发现
+		服务治理
+			Spring Cloud封装了Netflix公司开发的Eureka模块来实现服务治理
+			在传统的rpc远程调用框架中，管理每个服务与服务之间依赖关系比较复杂，所以需要使用服务治理，管理服务与
+			服务之间的依赖关系，可以实现服务调用、负载均衡、容错等，实现服务发现与注册。
+		什么是服务注册与发现
+			Eureka采用了CS的设计架构，EurekaServer作为服务注册功能的服务器，它是服务注册中心。而系统中的其他的微服务
+			，使用Eureka的客户端连接到Eureka Server并维持心跳连接。这样系统的维护人员就可以通过Eureka Server来监控系
+			统中各个微服务是否正常运行。在服务注册与发现中，有一个注册中心。当服务器启动的时候，会把当前自己服
+			务器的信息比如服务地址 通讯地址等以别名的方式注册到注册中心上，另一方(消费者|服务提供者)，以该别名的方
+			式去注册中心上获取到实际的服务通讯地址，然后再实现本地RPC调用。RPC远程调用框架核心设计思想：在于注册中心
+			，因为使用注册中心管理每个服务与服务之间的一个依赖(服务治理概念)，在任何rpc远程框架中，都会有一个
+			注册中心(存放服务地址相关信息(接口地址))
+		Eureka的两个组件
+			Eureka Server
+				各个微服务节点通过配置启动后，会在EurakaServer中进行注册，这样EurekaServer中的服务注册表中将会存储所
+				有可以服务节点的信息，服务节点的信息可以在界面中看到
+			Eureka Client
+				是一个Java客户端，用于简化EurekaServer的交互，客户端同时也具备一个内置的、使用轮询(round-robin)负载
+				算法的负载均衡器。在应用启动后，将会向EurekaServer发送心跳(默认周期为30秒)。如果EurekaServer在多个心
+				跳周期内没有接收到某个节点的心跳，EurekaServer将会从服务注册表中把这个服务节点移除(默认90秒)
+	Eureka自我保护机制
+		为什么会产生Eureka自我保护机制
+			为了保证EurekaClient可以正常运行，EurekaClient与EurekaServer网络不通的情况下，EurekaServer不会立刻将Eure
+			kaClient服务剔除，该处理机制属于CAP原则中的AP。
+		什么是自我保护机制
+			当EurekaServer节点在短时间内丢失过多客户端时(可能发生网络分区故障)，那么这个节点就会进入自我保护模式，在
+			自我保护模式，EurekaServer会保护服务注册表中的信息，不再注销任何服务实例。
+		如何关闭自我保护机制
+			enable-self-preservation: false
+	
+		
+如何把 Spring Boot 项目添加到 Run Dashboard 中
+	打开项目.idea文件夹下的workspace.xml，找到
+		<configuration name="项目启动类名" type="SpringBootApplicationConfigurationType" factoryName="Application">
+		将 factoryName="Application" 改成 factoryName="Spring Boot"
+		   type="Application" 改成 type="SpringBootApplicationConfigurationType"
+	保存文件后在idea中build一下项目，然后在启动类右键启动项目，在这个时候就会发现项目就已经被添加到 Run Dashboard 视图中
+	
+三个注册中心(Eureka,zookeeper,consul)的异同点
+	组件名  	语言  CAP  服务健康检查 对外暴露接口  SpringCloud集成
+	Eureka		Java  AP   可配支持	    HTTP		  已集成
+	consul		GO	  CP   支持			HTTP/DNS	  已集成
+	zookeeper	Java  CP   支持			客户点        已集成
+	
+Nginx 和 Ribbon 的区别
+	Nginx 是服务器端的负载均衡，也属于集中式负载均衡 
+		即在服务的消费方和提供方之间使用独立的负载均衡设施，由该设施负责把访问请求通过某种策略转发至服务的提供方。
+	Ribbon 是客户端的负载均衡，也属于进程内负载均衡
+		将负载逻辑集成到消费方，消费方从服务注册中心获知有哪些地址可用，然后自己再从这些地址中选择出一个合适的服务器
+
+Ribbon
+	是什么
+		负载均衡 + RestTemplate调用，是一个软负载均衡的客户端组件，可以和其他所请求的的客户端结合使用。
+	Ribbon核心组件IRule
+		自带的选取服务的算法
+			1、 RoundRobinRule    轮询
+			2、 RandomRule		  随机
+			3、 RetryRule 		  重试
+				先按照RoundRobinRule的策略获取服务,如果获取服务失败则在指定时间内进行重试,获取可用的服务
+			4、WeightedResponseTimeRule
+				对RoundRobinRule的扩展,响应速度越快的实例选择权重越多大,越容易被选择
+			5、BestAvailableRule
+				会先过滤掉由于多次访问故障而处于断路器跳闸状态的服务,然后选择一个并发量最小的服务
+			6、AvailabilityFilteringRule
+				先过滤掉故障实例,再选择并发较小的实例
+			7、ZoneAvoidanceRule
+				默认规则,复合判断server所在区域的性能和server的可用性选择服务器
+	应用不同的Ribbon自带的负载均衡算法
+		1、新建配置类MySelfRule (该配置类要放在@ComponentScan标签所扫描不到的包下，这里新建了一个com.atguigu.myrule包)
+		2、定义Bean ：@Bean  public IRule myRule(){ return new RandomRule();}
+		3、在启动类加上@RibbonClient(name="CLOUD-PAYMENT-SERVICE",configuration = MySelfRule.class)注解
+	Ribbon默认负载轮询算法原理
+		RestTemplate接口第几次请求数 % 服务器集群总数量 = 实际调用服务器位置下标(每次服务启动后RestTemplate接口计数从1开始)
+	
+RestTemplate
+	getForObject和getForEntity的区别 
+		 
+		getForEntity：可以获取到被调用接口更加详细的信息，包括响应头，响应状态码等等。
+		
+OpenFeign
+	是什么
+		Feign是一个声明式的Web服务客户端，让编写web服务客户端变得非常容易，只需要创建一个接口并在接口上添加注解。
+	使用实际步骤
+		1：在 pom 文件中添加：
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-openfeign</artifactId>
+			</dependency>
+		2：在主启动类添加 @EnableFeignClients 注解 (激活并开启Feign)
+		3：新建一个 Feign 接口类，在类上加上 @Component 和 @FeignClient(value = 暴露的服务名)，新建一个和被调用接口一致的接口头
+			例如：
+				@GetMapping(value = "/payment/get/{id}")
+				public CommonResult getPaymentById(@PathVariable("id") Long id);
+		4：在 consumer 端的 controller 层使用 @Resource 实例化 Feign 接口类，最后在逻辑代码中调用即可。
+	调用超时控制
+		openFeign 默认等待1秒
+		设置 openFeign 等待时间
+			在 application.yml 中配置以下内容 
+			ribbon:
+			  #的是建立连接后从服务器读取到可用资源所用的时间
+			  ReadTimeout: 5000
+			  #指的是建立连接所用的时间，适用于网络状况正常的情况下，两端连接所用的时间
+			  ConnectTimeout: 5000
+	日志打印
+		日志级别
+			BASIC: 仅记录请求方法、URL、响应状态码及执行时间
+			HEADERS: 除了 BASIC 中定义的信息之外还有请求和响应的头信息
+			FULL: 除了 HEADERS 中定义的信息之外还有请求和响应的正文及源数据
+		实际应用
+			1、新建一个配置bean
+			2、在 application.yml 中配置以下内容
+				logging:
+				  level:
+					# feign 日志以什么级别监控哪个接口
+					com.atguigu.springcloud.service.FeignPaymentService: debug
+					
+Hystrix (豪猪哥)
+	是什么
+		是一个用于处理分布式系统的延迟和容错的开源库，在分布式系统里，许多依赖不可避免的会调用失败，比如超时、异常等、Hyst
+		rix 能够保证在一个依赖出问题的情况下，不会导致整体服务的失败，避免级联故障，以提升分布式系统的弹性
+		“断路器”
+			本身是一种开关装置，当某个服务单元发生故障后，通过断路器的故障监控(类似熔断保险丝)，向调用方返回一个符合预期的
+			、可处理的备选响应(FallBack), 而不是长时间的等待或着抛出调用方无法处理的异常，这样就保证了服务调用方的线程
+			不会被长时间、不必要的占用，从而避免了故障在分布式系统中的蔓延，乃至雪崩。
+	Hystrix 重要概念 
+		1、服务降级(fallBack)
+			服务器忙，请稍后重试！不让客户端等待并返回一个友好的提示，fallBack
+			哪些时候会触发降级
+				1)、程序运行异常
+				2)、超时
+				3)、服务熔断触发服务
+				4)、线程池/信号量打满也会导致服务降级
+		2、服务熔断(break)
+			当服务异常后(超时，运行异常，宕机),首先进行服务降级返回友好提示，当在一定的时间窗口期内调用失败的失败率达到了
+			指定的数值后直接开启断路器，使该服务不可访问并进行服务降级返回提示。随后熔断机制会持续监控接口的调用情况，
+			在休眠时间窗口期(circuitBreaker.errorThresholdPercentage)结束之后断路器的状态会变成半开的状态，会让其中一个请
+			求进行服务访问，如果成会让其中一个请求进行服务访问，如果成功变成关闭的状态，失败就重新开启断路器。
+		3、服务限流(flowlimit)
+			秒杀高并发等操作，严禁一窝蜂的过来拥挤，大家排队，一秒N个，有序进行。
+	Hystrix 实际使用
+		一、服务降级
+			1、 提供者(provider)
+				1、在 Main 主函数添加 @EnableCircuitBreaker 注解
+				2、在需要进行 服务降级 处理的方法头加上
+					 @HystrixCommand(fallbackMethod = "paymentInfo_TimeoutHandler", commandProperties = {
+							@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000")
+					}) 
+					注解
+						fallbackMethod = "paymentInfo_TimeoutHandler" : 指定了方法异常(超时或异常)后所调用的兜底的方法(方法需要自己写)
+						commandProperties : 
+							@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000"
+								指定了超时属性的超时时间 3秒
+			2、消费者(consumer)
+				1、在 application.yml 加上 feign:hystrix:enabled: true (开启 feign 对 hystrix 的支持)
+				2、在 Main 主函数添加 @EnableHystrix 注解
+				3、在需要进行 服务降级 处理的方法头加上
+					 @HystrixCommand(fallbackMethod = "paymentInfo_TimeoutHandler", commandProperties = {
+							@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000")
+					}) 注解
+					fallbackMethod = "paymentInfo_TimeoutHandler" : 指定了方法异常(超时或异常)后所调用的兜底的方法(方法需要自己写)
+					commandProperties : 
+						@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000"
+							指定了超时属性的超时时间 3秒
+			高级应用
+				1、配置全局的 服务降级 方法
+					在 类头 加上 @DefaultProperties(defaultFallback = "payment_Global_FallbackMethod")
+					所有加了 @HystrixCommand 注解但是没有特殊指定 服务降级 方法的方法都会走 全局配置的 服务降级 方法
+				2、配置处理 服务降级 的类
+					1)、新建一个类实现被@FeignClient修饰的接口(该接口是用作openFeign远程调用的)，实现接口方法，为了
+						让该类被spring 托管，还需要在类头加上 @Component 注解
+					2)、在被实现的接口的 @FeignClient 注解中加上 fallback = 实现接口的类.class，例如：
+						@FeignClient(value="CLOUD-PAYMENT-HYSTRIX-SERVICE", fallback = PaymentHystrixServiceFallBack.class)
+		二、服务熔断
+			1、主函数注解配置与 服务降级 是一致的
+			2、方法头的 @HystrixCommand 注解里面的配置较 服务降级 新增了几个配置参数，如下：
+				@HystrixCommand(fallbackMethod = "paymentCircuitBreaker_fallBack", commandProperties = {
+					//是否启用断路器
+					@HystrixProperty(name = "circuitBreaker.enabled", value = "true"),         
+					//请求次数，只有在指定的时间窗口内请求次数达到这个值了才有资格进行熔断的操作                
+					@HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "10"),  
+					//休眠时间窗口期
+					@HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "10000"),        //失败率达到多少后跳闸
+					@HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60") 
+			})
+	@HystrixCommand -> commandProperties 的全部配置及注解
+		// 设置隔离策略，THREAD 表示线程池 SEMAPHORE：信号池隔离
+		@HystrixProperty(name = "execution.isolation.strategy", value = "THREAD")
+		// 当隔离策略信号池隔离的时候，用来设置信息池的大小(最大并发数)
+		@HystrixProperty(name = "execution.isolation.semaphore.maxConcurrentRequests", value = "10")
+		// 配置命令执行的超时时间
+		@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value="3000")
+		// 是否启用超时时间
+		@HystrixProperty(name="execution.timeout.enabled", value="true")
+		// 执行超时的时候是否中断
+		@HystrixProperty(name="execution.isolation.thread.interruptOnTimeout", value="true")
+		// 执行被取消的时候是否中断
+		@HystrixProperty(name="execution.isolation.thread.interruptOnFutureCancel", value="true")
+		// 允许回调方法执行的最大并发数
+		@HystrixProperty(name="fallback.isolation.semaphore.maxConcurrentRequests", value="10")
+		// 服务降级是否启用，是否执行回调函数
+		@HystrixProperty(name="fallback.enabled", value="true")
+		// 是否启用断路器
+		@HystrixProperty(name="circuitBreaker.enabled", value="true")
+		// 该属性用来设置在滚动时间窗中，断路器熔断的最小请求数
+		@HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="20")
+		// 该属性用来设置在滚动时间窗中，在请求数量超过了 circuitBreaker.requestVolumeThreshold 的情况下，如果错误请求率超过了
+		// 50% 后就会打开断路器
+		@HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="50")
+		// 该属性用来设置当断路器打开之后的休眠时间窗，休眠时间窗结束之后，会将断路器设置为 [半开] 的状态，尝试熔断的请求命令，
+		// 如果成功就关闭断路器，如果失败就打开断路器
+		@HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="5000")
+		// 断路器强制打开
+		@HystrixProperty(name="circuitBreaker.forceOpen", value="false")
+		// 断路器强制关闭
+		@HystrixProperty(name="circuitBreaker.forceClosed", value="false")
+		// 滚动时间窗设置，该时间用于断路器判断健康度时需要收集信息的持续时间
+		@HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="10000")
+		// 该属性用来设置滚动时间统计指标信息时划分的 “桶” 的数量，断路器在收集信息的时候会根据设置的时间窗长度拆分成多个 “桶”
+		// 来累计各度量值，每个 “桶” 记录一段时间内的采集指标。 比如 10 秒被拆分成 10 个 “桶”收集这样，所以 timeInMilliseconds 
+		// 必须能被 numBuckets 整除，否则会抛出异常
+		@HystrixProperty(name="metrics.rollingStats.numBuckets", value="10")
+		// 该属性用来设置对命令执行的延迟是否使用百分位数来跟踪和计算。如果设为false，那么所有概要统计都将返回 -1
+		@HystrixProperty(name="metrics.rollingPercentile.enabled", value="false")
+		// 该属性用来设置百分位统计的滚动窗口的持续时间
+		@HystrixProperty(name="metrics.rollingPercentile.timeInMilliseconds", value="10000")
+		// 该属性用来设置百分位统计的滚动窗口中使用的 “桶” 的数量
+		@HystrixProperty(name="metrics.rollingPercentile.numBuckets", value="10")
+		// 该属性用来设置正在执行过程中每个 “桶” 中保留的最大执行次数，如果在滚动时间窗内发生超过该设定值的执行次数，
+		// 就从最开始的位置开始重写，例如：将该值设置为100，滚动窗口为 10 秒，若在 10 秒内一个 “桶” 中发生了500 次执行，
+		// 那么该 “桶” 中只保留	最后 100 次执行的统计。另外，增加该值的大小将会增加内存的消耗，并增加排序百分位数所需的计算时间
+		@HystrixProperty(name="metrics.rollingPercentile.bucketSize", value="200")
+		// 该属性用来设置采集影响断路器状态的健康快照(请求的成功、错误百分比)的间隔等待时间
+		@HystrixProperty(name="metrics.healthSnapshot.intervalInMilliseconds", value="500")
+		// 是否开启请求缓存
+		@HystrixProperty(name="requestCache.enabled", value="true")
+		// HystrixCommand 的执行和事件是否打印日志到 HystrixRequestLog 中
+		@HystrixProperty(name="requestLog.enabled", value="true")
+		
+SpringCloud Gateway(服务网关)
+	SpringCloud Gateway 是基于WebFlux框架实现，而WebFlux框架底层则使用了高性能的Reactor模式通信框架Netty, SpringCloud Gateway的目标是提供统一的路由方式且基于Filter链的方式提供了网关基本的功能，例如：安全，监控/指标 和限流
+	为什么要使用SpringCloud Gateway 而不用Zuul
+		Spring Cloud Gateway 具有如下特性：
+			 1、基于Spring Framework5 Project Reactor 和 Spring Boot 2.0 进行构建 
+			 2、动态路由：能够匹配任何请求属性
+			 3、可以对路由指定 Predicate(断言) 和 Filter (过滤器)
+			 4、集成 Hystrix 的断路器功能
+			 5、集成 Spring Cloud 服务发现功能
+		Springcloud Gateway 和 Zuul 的区别
+			1、Zuul 1.x 是一个基于阻塞I/O的 API 网关，它基于 Servlet2.5使用阻塞架构，不支持任何长连接
+			2、Springcloud Gateway 基于 Netty 非阻塞和支持长连接
+	SpringCloud Gateway 核心逻辑
+		路由转发 + 执行过滤器链
+	SpringCloud Gateway 三大核心概念
+		1、Route(路由)
+			路由是构建网关的基本模块，它由ID, 目标URI, 一系列的断言和过滤器组成，如果断言为 true 则匹配该路由
+		2、Predicate(断言)
+			开发人员可以匹配HTTP请求中的所有内容(例如请求头或请求参数)，如果请求与断言相匹配则进行路由
+		3、Filter(过滤)
+			指的式Spring框架中GatewayFilter的实例，使用过滤器，可以在请求被路由前或者之后对请求进行修改
+	SpringCloud Gateway 网关路由的两种配置方式
+		1、yml配置文件的方式
+			spring:
+			  cloud:
+				gateway:
+				  routes:
+					- id: payment_routh           #路由的ID，没有固定规则但要求唯一，建议配合服务名
+					  uri: http://localhost:8001  #匹配后提供服务的路由地址
+					  predicates:
+						- Path=/payment/get/**    #断言,路径相匹配的进行路由
+			使用yml配置的方式实现以注册中心上的微服务名为路径创建动态路由进行状态，从而实现动态路由的功能，配置如下:
+				spring:
+				  cloud:
+					gateway:
+					  discovery:
+						locator:
+						  enabled: true     				#开启从注册中心动态创建路由的功能，利用服务名进行路由
+					  routes:
+						- id: payment_routh           		#路由的ID，没有固定规则但要求唯一，建议配合服务名
+						  uri: lb://cloud-payment-service	#匹配后提供服务的路由地址
+						  predicates:
+							- Path=/payment/get/**    		#断言,路径相匹配的进行路由
+		2、代码注入RouteLocator的Bean
+			@Configuration
+			public class GetWayConfig {
+			
+				/**
+				 * 设置了一个id 为 path_route_atguigu 的路由规则
+				 * 当访问地址为 http://localhost:9527/guonei 时会自动转发到地址：http://news.baidu.com/guonei
+				 * @param builder
+				 * @return
+				 */
+				@Bean
+				public RouteLocator customRouteLocator(RouteLocatorBuilder builder){
+					RouteLocatorBuilder.Builder routes = builder.routes();
+					routes.route("path_route_atguigu", r -> r.path("/guonei").uri("http://news.baidu.com/guonei")).build();
+					return routes.build();
+				}
+			
+			}
+	SpringCloud Gateway 网关路由 断言(predicates) 的配置及解释
+		- Path=/payment/lb/**    #断言,路径相匹配的进行路由
+        - After=2020-07-05T23:07:36.186+08:00[Asia/Shanghai]    #断言，需要在这个时间后访问
+			这个时间可以通过 ZonedDateTime zonedDateTime = ZonedDateTime.now(); 来获取
+        - Before=2020-07-05T22:07:36.186+08:00[Asia/Shanghai]    #断言，需要在这个时间前访问
+		# 断言，需要在这个时间段内访问
+        - Between=2020-07-05T22:07:36.186+08:00[Asia/Shanghai],2020-07-05T22:07:36.186+08:00[Asia/Shanghai] 
+        - Cookie=username,zzyy #断言，需要请求中的Cookie包含username的key，并且该key的值要为zzyy
+			cmd 窗口执行 curl http://localhost:9527/payment/lb --cookie "username=zzyy" 验证
+        - Header=X-Request-Id, \d+   #断言，请求头要有X-Request-Id属性并且值为正整数
+			cmd 窗口执行 curl http://localhost:9527/payment/lb -H "X-Request-Id:11" 验证
+        - Host=**.atguigu.com       #断言，请求头要有Host属性并且值为**.atguigu.com(**为通配符)
+			cmd 窗口执行 curl http://localhost:9527/payment/lb -H "Host:a.atguigu.com" 验证
+        - Method=GET                #断言，要是GET请求
+			cmd 窗口执行 curl -X POST "http://localhost:9527/payment/lb" 验证
+        - Query=username, \d+         #断言，需要带username查询参数且值为正整数
+			cmd 窗口执行 curl -X POST "http://localhost:9527/payment/lb" 验证
+	SpringCloud Gateway 自定义过滤链(Filter)
+		@Component
+		public class MyLogGateWayFilter implements GlobalFilter, Ordered {
+			@Override
+			public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+				//获取请求参数中key为uname的属性的值
+				String username = exchange.getRequest().getQueryParams().getFirst("uname");
+				if(username == null){
+					log.info("*********用户名为null，非法用户，/(ㄒoㄒ)/~~");
+					exchange.getResponse().setStatusCode(HttpStatus.NOT_ACCEPTABLE);		//设置拒绝访问的状态码
+					return exchange.getResponse().setComplete();							//停止过滤连，返回Mono<Void>
+				}
+				//如果还有下一个过滤条件接着走
+				return chain.filter(exchange);												
+			}
+			@Override
+			public int getOrder() {
+				//在整个过滤链中的执行顺序
+				return 0;																	/
+			}
+
+		}
+
+SpringCloud Config
+	是什么
+		SpringCloud Config为微服务架构中的微服务提供集中化的外部配置支持，配置服务器为各个不同微服务应用的所有环境提供了一个中心
+		化的外部配置。
+	能够干什么
+		1、集中管理文件
+		2、不同环境不同配置，动态化的配置更新，分环境部署 比如 dev/test/prod/beta/release
+		3、运行期间动态调整配置，不在需要在每个服务部署的机器上编写配置文件，服务会向配置中心统一拉取配置自己的信息
+		4、当配置发生变动时，服务不需要重启即可感知到配置的变化并应用新的配置
+		5、将配置以REST接口的形式暴露
+	实际使用
+		SpringCloud Config 服务端(Server)
+			在 application.yml 配置如下
+			spring:
+			  application:
+				name: cloud-config-center     									#注册进Enreka服务器的微服务名
+			  cloud:
+				config:
+				  server:
+					git:
+					  uri: git@github.com:renshengxuetu/springcloud-config.git 	#GitHub上面的git仓库名字
+					  # 搜索目录
+					  search-paths:
+						- springcloud-config
+				  # 读取分支
+				  label: master
+		SpringCloud Config 客户端(Client)
+			bootstrap.yml
+				bootstrap.yml 和 application.yml 的区别
+					appliation.yml 是用户级资源配置，而bootstrap.yml 是系统级的，优先级更加高
+					SpringCloud 会先创建一个 “BootStrap Context”，作为Spring应用的 “Application Context” 的父级上下文。初始化的时候 “BootStrap Context” 负责从外部源加载配置属性并解析配置，这两个上下文共享
+					一个外部获取的 "Environment" (环境)
+			用法：
+				在 bootstrap.yml 配置如下
+				spring:
+				  application:
+					name: config-client
+				  cloud:
+					#Config客户端配置
+					config:
+					  label: master #分支名称
+					  name: config  #配置文件名称
+					  profile: dev  #读取后缀名称 上述3个综合: master 分支上 config-dev.yml 的配置文件被读取
+									 http://config-3344.com:3344/master/config-dev.yml
+					  uri: http://localhost:3344
+			SpringCloud Config 服务端 更新配置文件怎样让 客户端 也能及时更新配置文件
+			(这个配置在后续加上了 bus 消息总线后可以删掉)
+				1、在 bootstrap.yml 加上如下配置
+					#暴露监控端点
+					management:
+					  endpoints:
+						web:
+						  exposure:
+							include: "*"
+				2、在任意 Controller 层的类头加上 @RefreshScope 注解
+				3、使用 CMD 发送 POST 请求更新配置文件，命令如下(也可以使用其他方法发送post请求)：
+					curl -X POST "http://localhost:3355/actuator/refresh"    (actuator/refresh 是固定写法)
+
+SpringCloud Bus(消息总线)
+	是什么
+		SpringCloud Bus 配合SpringCloud Config 使用可以实现配置的动态刷新
+		SpringCloud Bus 是用来将分布式系统的节点与轻量级消息系统链接起来的框架，它整合了Java的事件处理机制和消息中间件的功能，目
+		前支持 RabbitMQ 和 Kafka
+	什么是 总线
+		在微服务架构的系统中，通常会使用轻量级的消息代理来构建一个公用的消息主题，并让系统中所有微服务实例都连接上来
+		，由于该主题中产生的消息会被所有实例监听和消费，所以称它为消息总线
+	两种消息通知的设计思想及应该选择哪一种
+		1、利用消息总线触发个客户端的 /bus/refresh ,而刷新所有客户端的配置
+		2、利用消息总线出发一个服务端 ConfigServer 的 /bus/refresh 断，而刷新所有客户端的配置
+		应该选择第二种，原因如下：
+			1)、第一种违反了单个微服务职责单一性的原则
+			2)、破坏了微服务各节点的对等性
+	实际使用(这里选取第二种消息通知的设计思想)
+		1、在 SpringCloud Config 服务端(Server) 和 SpringCloud Config 客户端(Client) 的 pom.xml 加上以下配置：
+			 <!--添加消息总线RabbitMQ的支持-->
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-bus-amqp</artifactId>
+			</dependency>
+		2、在 SpringCloud Config 服务端(Server) 和 SpringCloud Config 客户端(Client) 的 yml 文件 加上以下配置：
+			#RabbitMQ相关配置
+			spring: 
+			  rabbitmq:
+				host: localhost
+				prot: 5672
+				username: guest
+				password: guest
+		3、在 SpringCloud Config 服务端(Server) 的 applicatoin.yml 额外加入以下配置：
+			#RabbitMQ相关配置,暴露 BUS 刷新配置的断点
+			management:
+			  endpoints:
+				web:
+				  exposure:
+					include: 'bus-refresh'
+		注：
+			最后需要执行 CMD 命令：curl -X POST "http://localhost:3344/actuator/bus-refresh" 才能将最新的配置通知给各客户端
+	定点通知(指定SpringCloud Config 客户端(Client)更新配置)
+		执行 CMD 命令：curl -X POST "http://localhost:3344/actuator/bus-refresh/服务名:端口"
+
+SpringCloud Stream(消息驱动)
+	是什么
+		屏蔽底层消息中间件的差异，降低切换成本，统一消息的编程模型
+	原理
+		通过定义绑定器 Binder 作为中间层，实现了应用程序与消息中间件细节之间的隔离(目前只支持 RabbitMQ 和 Kafka MQ)
+	三个基础元素
+		1、Binder ：连接中间件，屏蔽差异
+		2、Channel ：连接通道
+		3、Source 和 Sink ：从 Stream 发布消息就是输出(Source)，接受消息就是输入(Sink) 
+	实际使用
+		消费生产者(Source)
+			在 application.yml 文件中配置如下：
+				spring:
+				  cloud:
+					stream:
+					  binders:          #在此处配置要绑定的 rabbitmq 的服务信息
+						defaultRabbit:  #表示定义的名称，用于 binding 整合
+						  type: rabbit  #消息中间件类型
+						  environment:  #设置 rabbitmq 相关的环境配置
+							spring:
+							  rabbitmq:
+								host: localhost
+								prot: 15672
+								username: guest
+								password: guest
+					  bindings:         #服务的整合处理
+						output:         #这个名字是一个通道的名字
+						  destination: studyExchange      #表示要使用的 Exchange 名称定义
+						  content-type: application/json  #设置消息类型，本次为 json，文本则设置 "text/plain"
+						  binder: defaultRabbit           #设置要绑定的消息服务的具体设置
+			新建如下类(Service层)：
+				@EnableBinding(Source.class)//定义消息的推送
+				public class MessageProviderImpl implements IMessageProvider {
+					@Resource
+					private MessageChannel output; //消息发送管道
+					@Override
+					public String send() {
+						String serial = IdUtil.simpleUUID();
+						output.send(MessageBuilder.withPayload(serial).build());
+						return serial;
+					}
+				}
+		消费者(Sink)
+			在 application.yml 文件中配置如下：
+				与上面 消费生产者(Source) 唯一的区别就是把 bindings:output: 改成 bindings:input
+			新建如下类(Controller层)：
+				@Component				  //spring注解
+				@EnableBinding(Sink.class)//定义消息接收
+				public class ReceiveMessageListenerController {
+					@StreamListener(Sink.INPUT)		//定义消息接收方法
+					public void input(Message<String> message){
+						System.out.println("消费者1号，----------> 接受到的消息：" + message.getPayload());
+					}
+				}
+	重复消费问题
+		使用 SpringCloud Stream 默认配置会存在重复消费的问题：一条消息同时被两个服务获取，在两个服务中同时生效。
+		解决方式: 分组
+			原理：在同一个组就会存在竞争关系，一条消息只会被其中一个服务所获取到，在不同组就可以同时获取。
+			实际使用：
+				在多台 消费者(Sink) 的 application.yml 配置同一个 group, 例如：
+					spring:
+					  cloud:
+						stream:
+						  bindings:         #服务的整合处理
+							input:          #这个名字是一个通道的名字
+							  group: atguigu                  #分组
+	消息持久化
+		消息持久化的意思是当 消费者(Sink) 停止时，消费生产者(Source) 发送的信号会被重启的 消费者(Sink) 重新获取。
+		实际使用
+			配置了 spring.cloud.stream.bindings.input.group 属性后就自动开启了持久化
+			
+SpringCloud Sleuth(请求链路跟踪)
+	是什么
+		SpringCloud sleuth 和 zipkin 共同组成请求链路跟踪的功能
+	实际使用
+		1、执行 CMD 命令 java -jar zipkin-server-2.12.9-exec.jar  然后访问 http://localhost:9411 就可以看到页面
+		2、在 application.yml 配置如下
+			spring:
+			  application:
+				zipkin:
+				  base-url: http://localhost:9411
+				sleuth:
+				  sampler:
+					# 采样率值介于 0 到 1 之间，1 则表示全部采集
+					probability: 1
+					
+SpringCloud Alibaba
+	一、Nacos
+		是什么
+			服务注册中心(替代Eureka) 和 配置中心(替代Config + bus)的组合
+		实际使用
+			服务提供者(provider)
+				在 application.yml 文件中配置如下：
+					spring:
+					  cloud:
+						nacos:
+						  discovery:
+							server-addr: localhost:8848     #服务注册地址 Nacos 地址
+					management:
+					  endpoints:
+						web:
+						  exposure:
+							include: '*'					#暴露监控端点
+			服务消费者(consumer)
+				在 application.yml 文件中配置如下：
+					spring:
+					  cloud:
+						nacos:
+						  discovery:
+							server-addr: localhost:8848     #服务注册地址 Nacos 地址
+				消费者通过 RestTemplate 调用提供者接口
+		Nacos 支持 AP(偏向高可用) 和 CP(偏向数据一致性) 的切换
+			执行以下 CMD 命令进行切换
+				curl -X PUT "$NACOS_SERVER:8848/nacos/v1/ns/operator/switches?entry=serverMode&value=CP"
+		Nacos Config (配置中心功能)
+			Nacos中配置列表的 Data id 的组成公式如下：
+				${spring.application.name}-${spring.profile.active}.${spring.cloud.nacos.config.file-extension}
+				${spring.application.name}：配置的微服务应用名
+				${spring.profile.active}：配置的环境例如(dev / prod / test / uat)
+				${spring.cloud.nacos.config.file-extension}：文件后缀(properties 或者 yaml 这两种)
+			实际使用
+				在 bootstrap.yml 配置如下
+					spring:
+					  application:
+						name: nacos-config-client
+					  cloud:
+						nacos:
+						  config:
+							server-addr: localhost:8848 #Nacos 作为配置中心地址
+							file-extension: yaml        #指定yaml格式的配置
+				在 application.yml 配置如下
+					spring:
+					  profiles:
+						active: dev #表示开发环境
+				综合上面配置文件生成的 Nacos 中配置列表的 Data id 为：
+					nacos-config-client-dev.yaml
+			Nacos Config (配置中心) 自带动态刷新功能，在 Nacos 的配置列中修改之后会立刻生效
+			Nacos Config 的分组功能
+				相当于给应用搜索配置文件又加上了一层查询条件
+				实际使用
+					在 bootstrap.yml 配置如下
+						spring:
+						  cloud:
+							nacos:
+							  config:
+								group: TEST_GROUP            #指定分组
+			Nacos Config 的命名空间(Namespace) 功能
+				相当于给应用搜索配置文件又加上了最大的一层查询条件
+				实际使用
+					在 bootstrap.yml 配置如下
+						spring:
+						  cloud:
+							nacos:
+							  config:
+								namespace: 29ec41b8-4352-4f33-803d-bb46a094d3a7 
+								#指定配置文件所在的命名空间(该id由Nacos生成)
+			Nacos Config 中的 命名空间(Namespace), 分组(Group) 和 Data Id 的关系
+				命名空间是最大的一层，里面包含得有多个分属于不同 Group 的 Data Id 列表
+		Nacos 集群和持久化配置(*重要*)
+			1、将 Nacos 的数据持久化方式从嵌入式数据库改成 mysql 数据库
+				为什么要改：
+					在集群环境，如果每台 Nacos 服务器都用自己独立的嵌入式数据库的话，会产生数据不一致的问题。
+				实际用法 
+					在 /conf/application.properties 加入下面配置
+						spring.datasource.platform=mysql
+						db.num=1
+						db.url.0=jdbc:mysql://127.0.0.1:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true
+						db.user=root
+						db.password=root
+			2、配置 Nacos 集群配置
+				在 /conf/cluster.conf 加入下面配置
+					172.17.23.123:3333
+					172.17.23.123:4444
+					172.17.23.123:5555
+					解释
+						172.17.23.123：是在linux 系统执行 hostname -i 命令得到的机器实际ip(有两个ip，取前一个)
+						3333：集群中 Nocas 服务之一的端口 
+			3、更改 Nacos 原生自带的 startup.sh 脚本，加入 -p 参数，可以直接指定启动的 Nacos 服务的端口
+				第一步：
+					将
+						while getopts ":m:f:s:" opt
+						do
+							case $opt in
+								m)
+									MODE=$OPTARG;;
+								f)
+									FUNCTION_MODE=$OPTARG;;
+								s)
+									SERVER=$OPTARG;;
+								?)
+								echo "Unknown parameter"
+								exit 1;;
+							esac
+						done
+					改成
+						while getopts ":m:f:s:p:" opt
+						do
+							case $opt in
+								m)
+									MODE=$OPTARG;;
+								f)
+									FUNCTION_MODE=$OPTARG;;
+								s)
+									SERVER=$OPTARG;;
+								p)
+									PORT=$OPTARG;;
+								?)
+								echo "Unknown parameter"
+								exit 1;;
+							esac
+						done
+				第二步
+					将
+						nohup $JAVA ${JAVA_OPT} nacos.nacos >> ${BASE_DIR}/logs/start.out 2>&1 &
+					改成
+						nohup $JAVA -Dserver.port=${PORT} ${JAVA_OPT} nacos.nacos >> ${BASE_DIR}/logs/start.out 2>&1 &
+				指定服务端口启动 Nacos
+					sh startup.sh -p 3333
+					sh startup.sh -p 4444
+					sh startup.sh -p 5555
+			4、更改 Nginx 的 nginx.conf 配置文件
+				在 http{} 中加入以下配置：
+					upstream cluster{
+						server 127.0.0.1:3333; 
+						server 127.0.0.1:4444;
+						server 127.0.0.1:5555;
+					}
+					server{
+						listen 	    80;
+						server_name localhost;
+						
+						location / {
+							proxy_pass http://cluster;
+						}
+					}
+				启动 Nginx 服务
+					sh service nginx start
+	二、Sentinel
+		是什么
+			就是基于 Hystrix 的进一步封装
+		实际使用
+			1、启动 Sentinel 的控制台页面
+				java -jar sentinel-dashboard-1.7.1.jar
+			2、在 appliation.yml 配置如下 
+				spring:
+				  cloud:
+					sentinel:
+					  transport:
+						# 配置 Sentinel dashborad 地址
+						dashboard: localhost:8080
+						#默认8719端口，假如被占用会自动从8719开始一次扫描，直到找到未被占用的端口
+						port: 8719
+				management:
+				  endpoints:
+					web:
+					  exposure:
+						include: '*'
+		流控规则
+			解释
+				资源名：唯一名称，默认请求路径(根据接口的请求路径来，不需要修改)
+				针对来源：Sentinel 可以针对调用者进行限流，填写微服务名，默认default(不区分来源)
+				阈值类型/单机阈值
+					QPS(每秒钟的请求数量)：当调用该api的QPS达到阈值的时候，进行限流
+					线程数：当调用该api的线程数达到阈值的时候，进行限流
+					QPS 和 线程数的区别：
+						QPS：请求数量的限制 
+						线程数：请求进入到方法内执行方法线程数量的限制
+				是否集群：不需要集群
+				流控模式：
+					直接：api达到限流条件时，直接限流
+					关联：当关联的资源到达阈值，就限流自己
+					链路：只记录指定链路上的流量(指定资源从入口资源进来的流量，如果达到阈值，就进行限流)
+						  【api级别的针对来源】
+				流控效果
+					快速失败：直接失败，抛异常
+					Warm Up：根据codeFactor(冷加载因子，默认3)的值，从阈值/codeFactor,经过预热时长，才达到
+							 设置的QPS阈值
+					排队等待：匀速排队， 请求以匀速的速度通过，阈值类型必须设置QPS，否则无效
+		降级规则
+			RT(平均响应时间，秒级)
+				平均响应时间 超出阈值 且 在 1 秒内通过的请求 >= 5,两个条件同时满足后触发降级
+				窗口期过后关闭断路器 
+				RT最大4900(毫秒)(更大需要通过 -Dcsp.sentinel.statistic.max.rt=xxx 才能生效)
+			异常比例(秒级)
+				QPS(1秒内的请求量) >= 5 且比例异常比例(秒级统计)超过阈值时，触发降级，时间窗口结束后，关闭降级。
+			异常数(分钟级)
+				异常数(分钟统计)超过阈值时，触发降级，时间窗口结束后，关闭降级。
+		热点参数限流
+			实际使用
+				@GetMapping(value = "/testHotKey")   //rest接口路径
+				@SentinelResource(value = "testHotKey", blockHandler = "dealHandler_test")
+				//testHotKey 对应着 sentinel 控制台的 热点规则 的 资源名
+				//dealHandler_test 表示触发限流后调用的返回友好提示的方法(如果不配这个的话返回 sentienl 默认的提示)
+				//* @SentinelResource 这个注解只处理 sentinel 控制台配置的违规情况，运行时异常不管 *
+				public String testHotKey(@RequestParam(value="p1",required = false)String p1,
+										 @RequestParam(value="p2",required = false)String p2){
+					return "-----------testHotKey";
+				}
+				//指定的返回友好提示的方法，BlockException 这个参数是必须要写的
+				public String dealHandler_test(String p1, String p2, BlockException exception){
+					return "---------------dealHandler_test /(ㄒoㄒ)/~~";
+				}
+			参数例外项
+				可以指定参数在规定的值的时候应用不一样的限流阈值
+		系统自适应限流
+			系统保护规则是应用整体维度的，而不是资源维度的，并且仅对入口流量生效
+			系统规则支持以下模式：
+				Load 自适应(仅对 Linux/Unix-like机器生效)：
+					系统的 load1 (1分钟cpu负载的平均值) 作为启发指标，进行自适应系统保护，当系统 load1 超过设定的启
+					发指标，且系统当前的并发线程数超过估算的系统容量时才会触发系统保护，系统容量由系统的 
+					maxQps(最大每秒请求数) * minRt(最小平均响应时间)，设置参考值一般是 cpu 核心数 * 2.5。
+				CPU usage（1.5.0+ 版本）：
+					当系统 CPU 使用率超过阈值即触发系统保护（取值范围 0.0-1.0），比较灵敏。
+				平均 RT(响应时间)：
+					当单台机器上所有入口流量的平均 RT 达到阈值即触发系统保护，单位是毫秒。
+				并发线程数：
+					当单台机器上所有入口流量的并发线程数达到阈值即触发系统保护。
+				入口 QPS：
+					当单台机器上所有入口流量的 QPS 达到阈值即触发系统保护。
+		@SentinelResource 注解参数解释
+			value: 对应着注册到 sentinel 控制台的资源名
+			blockHandlerClass: 进行服务降级处理所调用的返回处理结果的方法所在的类
+			blockHandler: 进行服务降级处理所调用的返回处理结果的方法
+						  (这个方法需要是static修饰，并且有 BlockException 参数)
+		Sentinel 处理 运行时异常 的注解属性 fallback 的用法(新建一个全局处理类)
+			和 Hystrix 用法一致：
+				1)、新建一个类实现被@FeignClient修饰的接口(该接口是用作openFeign远程调用的)，实现接口方法，为了
+					让该类被spring 托管，还需要在类头加上 @Component 注解
+				2)、在被实现的接口的 @FeignClient 注解中加上 fallback = 实现接口的类.class，例如：
+					@FeignClient(value="CLOUD-PAYMENT-HYSTRIX-SERVICE", fallback = PaymentHystrixServiceFallBack.class)
+			注：
+				这块功能是和 openFeign 配合一起使用的，需要做如下准备
+					1、引入 openFeign 的jar
+					2、在 application.yml 配置如下：
+						# 激活 sentinel 对 openfeign 的支持
+						feign:
+						  sentinel:
+							enabled: true
+					3、在启动类头加上 @EnableFeignClients 注解
+		Sentinel 整合 Nacos 做微服务限流配置持久化
+			1、在 application.yml 文件中配置如下：
+				spring:
+				  cloud:
+					sentinel:
+					  # 流控规则持久化到nacos
+					  datasource:
+						dsl:
+						  nacos:
+							server-addr: localhost:8848				#nacos 服务地址
+							data-id: ${spring.application.name}		#data-id
+							group-id: DEFAULT_GROUP					#分组
+							data-type: json							#数据类型
+							rule-type: flow							#规则类型
+			2、在 nacos 控制台配置数据类型为 json 的data, 内容如下：
+				[
+					{
+						"resource": "/ratelimit/byUrl",		#资源名称
+						"limitApp": "default",				#来源应用，默认default
+						"grade":1,							#阈值类型，0：线程数 1：QPS
+						"count":1,							#单机阈值
+						"strategy":0,						#流控模式，0：直接 1：关联 2：链路
+						"controlBehavior":0,				#流控效果，0：快速失败 1：Warm up 2：排队等待
+						"clusterMode":false					#是否集群
+					}
+				]
+	三、Seata
+		是什么
+			一款解决分布式事务的框架
+		唯一事务ID + 三组件模型 的概念
+			Transaction ID XID : 全局唯一的事务ID
+			三组件：
+				TC (Transaction Coordinator) - 事务协调者(Seata 服务器)
+					维护全局和分支事务的状态，驱动全局事务提交或回滚
+				TM (Transaction Manager) - 事务管理器(加有@GlobalTransactional的方法 - 事务的发起方)
+					定义全局事务的范围，开始全局事务、提交或回滚全局事务
+				RM (Resource Manager) - 资源管理器(数据库数据源 - 事务的参与者)
+					管理分支事务处理的资源，与TC交谈以注册分支事务和报告分支事务的状态，并驱动分支事务提交或回滚
+		处理一个分布式事务的流程
+			1、TM 向 TC 申请开启一个全局事务，全局事务创建成功并生成唯一全局XID
+			2、XID 在微服务调用链路的上下文中传播
+			3、RM 向 TC 注册分支事务，将其纳入 XID 对应全局事务的管辖
+			4、TM 向 TC 发起针对 XID 的全局提交或回滚决议
+			5、TC 调度 XID 下管辖的全部分支事务完成提交或回滚请求
+		实际使用
+			启动一个 seata 服务
+				1、更改 seata 的 file.conf 文件
+					1)、service {
+							vgroup_mapping.my_test_tx_group = "自己取一个名字"
+						}
+					2)、store {
+							mode = "db"   //将本来的 file 改成 db
+							db {
+								db-type = "mysql"								//连接数据库的类型
+								driver-class-name = "com.mysql.jdbc.Driver"		//数据库连接驱动类
+								url = "jdbc:mysql://127.0.0.1:3306/seata"	//数据库连接信息
+								user = "root"									//数据库用户名
+								password = "root"						//数据库密码
+							  }
+						}
+				2、在数据库中执行 seata conf 文件夹下的 db_store.sql
+				3、修改 seata 的 registry.conf 文件
+					registry {
+					  type = "nacos"						//将 file 改成 nacos
+					  nacos {
+						serverAddr = "localhost:8848"		//将 localhost 改成 localhost:8848
+					  }
+					}
+			项目中使用
+				1、复制一份 seata 的 file.conf 文件到项目的 resource 资源文件夹下，做如下修改
+					service {
+					  # fsp_tx_group: 在 seata 的主 file.conf 文件中配置的名字
+					  # default: 自己定义，同一个事务组下的微服务名字配成一致
+					  vgroup_mapping.fsp_tx_group = "default"
+					}
+					store {
+					  # 将 file 改成 db
+					  mode = "db"
+					  # 配置上自己的数据库连接信息
+					  db {
+						db-type = "mysql"
+						driver-class-name = "com.mysql.jdbc.Driver"
+						url = "jdbc:mysql://127.0.0.1:3306/seata"
+						user = "root"
+						password = "root"
+					  }
+					}
+				2、复制一份 seata 的 registry.conf 文件到项目的 resource 资源文件夹下，做如下修改
+					registry {
+					  # 配置成 nocos
+					  type = "nacos"
+
+					  nacos {
+						# 配置成自己 nacos 服务的地址
+						serverAddr = "localhost:8848"
+					  }
+					}
+				3、在 application.yml 文件中配置如下：
+					spring:
+					  cloud:
+						alibaba:
+						  seata:
+							# 自定义事务组名称需要与 seata-server(file.conf -> service -> 
+							# vgroup_mapping.my_test_tx_group)中的对应
+							tx-service-group: fsp_tx_group
+				4、在业务方法的方法头上加上如下注解：
+					@GlobalTransactional(name = "fsp-create-order", rollbackFor = Exception.class)
+					# name：自己取，唯一就行
+					# rollbackFor：监听什么异常
+		Seata 原理
+			AT 模式
+				整体机制
+					一阶段：
+						1)、Seata拦截"业务SQL",解析SQL语义,找到"业务SQL"要更新的业务数据,在业务数据更新前,
+							将其保存成"before image"(前置镜像)
+						2)、执行"业务SQL"更新业务数据
+						3)、将更新后的业务数据保存成"after image"(后置镜像)
+						注：以上操作全部在一个数据库事务内完成 ，这样保证了一阶段操作的原子性
+					二阶段：
+						提交：
+							因为在一阶段"业务SQL"已经提交至数据库, 二阶段的提交只需要将一阶段保存的快照数据(undo_log表)
+							和行锁(seata库的lock_table)删掉即可
+						回滚:
+							回滚方式是用"before image"(前置镜像)生成"逆向sql"然后执行sql进行数据还原,在进行
+							还原之前会先比对"after image"(后置镜像)和当前数据库的业务数据,如果两份数据完全
+							一致就说明没有脏写,可以进行还原,如果不一致说明有脏写,出现脏写需要转人工处理.

@@ -1,0 +1,37 @@
+搜索镜像
+	docker search [镜像名称]
+拉取镜像
+	docker pull [镜像名称]
+查看已安装镜像列表
+	docker images
+查看正在运行的容器列表
+	docker ps
+查看全部的容器列表(包括停止的)
+	docker ps -a
+停止一个正在运行的容器
+	docker stop [CONTAINER ID]
+进入一个已经启动的容器
+	docker exec -it [CONTAINER ID] /bin/bash
+		--user root: 使用root用户进入容器
+删除一个正在运行的容器
+	docker rm -f [CONTAINER ID]
+docker容器与宿主机之间文件的拷贝
+	docker cp 拷贝的文件路径 容器名:拷贝的路径
+	docker cp 容器名:拷贝的文件路径 拷贝的路径 
+创建并启动一个容器	
+	oracle:
+		docker run -p 1521:1521 -p 1158:1158 --name oracle  -d [Oracle镜像名:版本号]
+		默认账户/密码
+			system/oracle
+		linux 下 oracle常用命令
+			sqlplus / as sysdba 							 进入sqlplus 
+			create user 用户名 identified by 口令[即密码]; 	 创建oracle用户
+			grant connect,resource to 用户名;				 给用户赋权[connect:连接权限 resource:建表权限 dba:数据库管理员权限]
+	mysql:
+		docker run --name [给新创建的容器命名] -e MYSQL_ROOT_PASSWORD=123456 -p 3306:3306 -d [mysql镜像名:版本号]
+			-e：配置信息，此处配置mysql root用户的登录密码
+			-p：端口映射
+	was：
+		docker run --name websphere -h websphere -e UPDATE_HOSTNAME=true -p 9043:9043 -p 9443:9443 --restart=always -d [was镜像名:版本号]
+		查看生成的登录密码
+			docker exec websphere cat /tmp/PASSWORD

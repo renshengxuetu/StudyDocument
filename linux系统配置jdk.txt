@@ -1,0 +1,27 @@
+Linux下安装jdk，步骤如下
+
+   1：下载jdk包：本章使用的为后缀为tar.gz的文件（不需要安装），如jdk-8u111-linux-x64.tar.gz
+
+　　下载RPM包： wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/8u151-b12/e758a0de34e24606bca991d704f6dcbf/jdk-8u151-linux-x64.rpm
+
+   2： 把jdk文件保存至Linux下目录：通过控制台，使用mkdir命令生成user/java目录，并把文件放入其下
+
+   3：解压tar.gz文件：通过控制台，进入user/java下，执行$ tar zxvf jdk-8u111-linux-x64.tar.gz，将其进行解压
+
+   4：配置环境变量：打开控制台，运行$ sudo vi /etc/profile，在最后插入要配置的内容 ，按Esc键 ，输入( :wq 保存并退出)                                 
+
+JAVA_HOME=/home/gcs/user/java/jdk1.8.0_111
+PATH=$JAVA_HOME/bin:$PATH
+CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export JAVA_HOME
+export PATH
+export CLASSPATH
+   5：运行$ source /etc/profile，使配置环境生效
+
+   6：运行$ java -version 看是否生效。若出现jdk版本号，则安装并配置环境变量成功
+
+ 
+
+如果是RPM安装包执行如下安装代码：
+
+rpm -i jdk-8u151-linux-x64.rpm

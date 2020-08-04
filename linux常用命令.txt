@@ -1,0 +1,52 @@
+﻿删除文件:
+	rm -f 目录/文件全名
+删除文件夹
+	rm -rf 目录
+		(-r就是向下递归会删除目录下的所有文件夹和文件,-f就是强制删除不作提示)
+压缩
+	zip -r 压缩成的文件全名 被压缩的文件夹目录
+		(-r表示递归处理,将压缩路径下的所有文件和文件夹压缩到压缩包,一般都会加上-r)
+解压
+	unzip 压缩文件目录加全名
+创建文件夹
+	mkdir 文件夹名
+查看系统位数
+	more /proc/version
+更改文件的权限
+	chmod a+w 文件名
+查看防火墙状态
+	systemctl status firewalld
+开启防火墙
+	systemctl start firewalld
+防火墙查看所有打开的端口
+	firewall-cmd --zone=public --list-ports
+更新防火墙规则
+	firewall-cmd --reload
+防火墙开启一个指定端口
+	firewall-cmd --zone=public --add-port=8080/tcp --permanent  
+保持后台运行一个jar包
+	nohup java -Duser.timezone=GMT+8 -jar demo.jar &
+进入mysql
+	mysql -uroot -p
+查看系统内存使用情况
+	top
+		VIRT:应用申请内存大小，属于虚拟内存  (单位:KB)
+		RES:应用实际占有内存大小			 (单位:KB)
+Xshell下载上传文件命令
+	rz:上传
+	sz:下载
+xargs命令
+	是给命令传递参数的一个过滤器，也是组合多个命令的一个工具
+	实例:
+		cat test.process | xargs -L 1 -I {} mv {} ./temp
+		该命令会读取 test.process 文件中的第一行，并将这个一行的内容当作参数传递给被 {} 包围的 mv 命令，并执行命令。
+	解析:
+		-L [数字] -L和数字之间有空格，表示从标准输入一个读取多少行传递给命令
+		-I 将xargs命令过滤的内容传递给被{}包围的命令，一般会一行一行传递
+		-P 修改最大的进程数，默认是1
+		-n[数字] -n和数字之间没有空格，表示命令在执行的时候一次用的参数的个数，默认是用所有的
+以sysdba的身份进入到sqlplus
+	sqlplus / as sysdba
+		
+	
+	

@@ -1,0 +1,27 @@
+鼠标右键打开Git Bash
+
+生成本机rsa-key
+	ssh-keygen -m PEM -t rsa -b 4096 -C "github邮箱"
+
+设置git全局用户名和邮箱：
+	git config --global user.name "用户名"
+	git config --global user.email "用户邮箱"
+从 github 上克隆项目到本地硬盘
+	git clone 项目git路径 
+从本地硬盘提交文件到 github 上
+	git add	文件名					//添加文件进入本地暂存区
+	git commit -m "说明"			
+	git push -u origin master   	//开始上传了,然后会提示你输入你在GITHUB上注册的用户名跟密码
+	git status						//当前工作区文件状态
+创建并切换分支
+	git checkout -b "分支名"
+切换分支
+	git checkout "需要切换到的分支名"
+来查看分支情况
+	git branch
+合并分支	
+	git merge “需要被合并的分支名”	
+删除分支 [未合并分支无法删除]
+	git branch -d branch_name  
+推送分支至远端
+	git push origin “要推送的分支名”

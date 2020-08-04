@@ -1,0 +1,156 @@
+RPC(远程过程调用)[http://dubbo.apache.org/zh-cn/docs/user/quick-start.html 官方文档网址]
+	1、影响RPC性能的两大因素
+		1).通信性能
+		2).序列化性能
+	2、框架的进化
+		ORM 全部业务代码和页面都集中在一个服务器上 -->
+		MVC 根据业务分成若干个服务分布在多个服务器上，每一个都包含完整的业务代码和页面 -->
+		RPC 根据业务和实际需求将各种可独立出去的业务代码或页面都分布在独立的服务器上，通过网络协议相互调用 -->
+		SOA 在RPC的基础上增加流动计算架构
+	3、多个服务器之间性能的均衡
+		使用流动计算架构，根据访问量动态增加或减少指定服务器的数量，动态优先请求相对压力较少的服务器。
+	4、dubbo基本运行流程
+		初始化：容器启动 -> 服务提供者将服务注册到注册中心 -> 消费者从注册中心订阅所需服务
+		异步执行：
+			1) 注册中心异步将最新的注册服务信息推送给消费者
+			2) 服务提供者和消费者异步将调用和提供的基本信息放到监控中心
+		同步执行：消费者调用服务提供者的服务
+	5、dubbo实际使用流程
+		1) 搭建注册中心(以zookeeper为例)
+			打开CMD命令窗口执行 D:\soft\aboutDubboSoft\zookeeper-3.4.11\bin 目录下的 zkServer.cmd
+		2) 启动dubbo管理控制台
+			打开CMD命令窗口执行 D:\soft\aboutDubboSoft\dubboSoftware 目录下的 dubbo-admin-0.0.1-SNAPSHOT.jar
+			默认账号密码root/root
+		3) 启动dubbo监控中心
+			双击 D:\soft\aboutDubboSoft\dubbo-monitor-simple-2.0.0\assembly.bin 目录下的 start.bat 
+	6、MVC项目使用dubbo的实际流程
+		一、服务提供者(provide)
+			1) pom.xml引入 dubbo(这里以2.6.2版本为例) 和 zookeeper操作客户端(这里以curator 2.12.0 版本为例)
+			2) 新增spring配置文件 provide.xml 文件配置dubbo相关信息
+		二、消费者(consumer)
+			1) pom.xml引入 dubbo(这里以2.6.2版本为例) 和 zookeeper操作客户端(这里以curator 2.12.0 版本为例)
+			2) 新增spring配置文件 provide.xml 文件配置dubbo相关信息
+	7、springboot项目使用dubbo的实际流程
+		一、服务提供者(provide)
+			1) pom.xml引入 dubbo-starter(这里以dubbo-spring-boot-starter 0.2.0版本为例)
+			2) 在application.properties 文件中以键值对的方式配置dubbo相关信息
+			3) 通过@Service(com.alibaba.dubbo.config.annotation.Service)注解 (类注解) 暴露服务
+		二、消费者(consumer)
+			1) pom.xml引入 dubbo-starter(这里以dubbo-spring-boot-starter 0.2.0版本为例)
+			2) 在application.properties 文件中以键值对的方式配置dubbo相关信息
+			3) 通过@Reference(com.alibaba.dubbo.config.annotation.Reference)注解 (变量注解) 获取服务
+		springboot启动类需额外添加 @EnableDubbo 注解
+	8、dubbo读取配置方式的优先顺序
+		java虚拟机配置方式(这里以-Ddubbo.protocol.port=20081为例) 优于 
+		springboot项目的application.properties或者mvc项目的xxx.xml 优于
+		dubbo.properties(一般用于配置一些公用的不易变更的参数)
+	9、dubbo不同粒度配置的优先顺序
+		1) 精确优先(例如方法级的配置要优于接口级的配置)
+		2) 消费者优先(例如<dubbo:reference>的配置要优于<dubbo:service>的配置)
+	10、设置重复调用(以<dubbo:reference retries="3" 为例)的方法必须是幂等方法
+		幂等方法：多次执行后对数据库的结果影响是一致的，例如查询，修改和删除
+	11、本地存根
+		消费者在调用远程服务之前可以先调用本地存根，做一些本地的逻辑判断，具体使用方法如下：
+			1) 新建一个本地存根类
+				public class UserServiceStub implements UserService {
+					private final UserService userService;
+					public UserServiceStub(UserService userService) {
+						super();
+						this.userService = userService;
+					}
+				}
+			2) 在<dubbo:reference>标签中添加属性 stub="本地存根类的全类名" 
+	12、dubbo的高可用 -- 监控中心和注册中心
+		1) 监控中心宕掉不影响使用，只是丢失部分采样数据
+		2) zookeeper注册中心全部宕掉之后，服务提供者和消费者仍能通过本地缓存通讯
+	13、dubbo的高可用 -- dubbo负载均衡策略
+		1) Random LoadBalance
+			随机，按权重设置随机概率。
+			在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，
+			有利于动态调整提供者权重。
+		2) RoundRobin LoadBalance
+			轮循，按公约后的权重设置轮循比率。
+			存在慢的提供者累积请求的问题，
+			比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上。
+		3) LeastActive LoadBalance
+			最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差。
+			使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大。
+		4) ConsistentHash LoadBalance
+			一致性 Hash，相同参数的请求总是发到同一提供者。
+			当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动。
+		设置负载均衡策略
+			@Reference(loadbalance="[random | leastactive | roundrobin | consistentHash]")
+	14、dubbo的高可用 -- 服务降级
+		1) mock=force:return+null 不发起远程调用直接返回 null 值
+			对应dubbo控制台消费者列表中的屏蔽按钮
+		2) mock=fail:return+null 发起远程调用当错误时直接返回 null 值
+			对应dubbo控制台消费者列表中的容错按钮
+	15、dubbo的高可用 -- 集群容错
+		1) Failover Cluster
+			失败自动切换，当出现失败，重试其它服务器。通常用于读操作，但重试会带来更长延迟。可通过 retries="2" 来设置重试次数(不含第一次)。
+		2) Failfast Cluster
+			快速失败，只发起一次调用，失败立即报错。通常用于非幂等性的写操作，比如新增记录。
+		3) Failsafe Cluster
+			失败安全，出现异常时，直接忽略。通常用于写入审计日志等操作。
+		4) Failback Cluster
+			失败自动恢复，后台记录失败请求，定时重发。通常用于消息通知操作。
+		5) orking Cluster
+			并行调用多个服务器，只要一个成功即返回。通常用于实时性要求较高的读操作，但需要浪费更多服务资源。
+			可通过 forks="2" 来设置最大并行数。
+		6) Broadcast Cluster
+			广播调用所有提供者，逐个调用，任意一台报错则报错，通常用于通知所有提供者更新缓存或日志等本地资源信息。
+		集群模式配置(默认为 Failover Cluster)
+			<dubbo:service cluster="failsafe" /> 或 <dubbo:reference cluster="failsafe" />
+	16、dubbo的高可用 -- 整合 hystrix
+		1) 导入 hystrix 的依赖jar包
+			在消费者和服务提供者的 pom.xml 文件中的 <project> 标签内添加以下内容
+				<dependencyManagement>
+					<dependencies>
+						<dependency>
+							<groupId>org.springframework.cloud</groupId>
+							<artifactId>spring-cloud-dependencies</artifactId>
+							<version>Finchley.SR1</version>
+							<type>pom</type>
+							<scope>import</scope>
+						</dependency>
+					</dependencies>
+				</dependencyManagement>
+			在消费者和服务提供者的 pom.xml 文件中的 <dependencies> 标签内添加以下内容
+				<dependency>
+					<groupId>org.springframework.cloud</groupId>
+					<artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
+				</dependency>
+		2) 在消费者和服务提供者的启动类添加类注解 @EnableHystrix
+		3) 在服务提供者提供的方法上添加方法注解 @HystrixCommand
+		4) 在服务提供者需要调用服务提供者方法的方法上添加方法注解
+			@HystrixCommand(fallbackMethod="出错后调用的处理方法名")
+
+dubbo原理
+	1、完整的RPC调用流程(同步调用，异步另说)
+		1) 服务消费方(client)调用以本地调用方式调用服务； 
+		2) client stub(消费方代理)接收到调用后负责将方法、参数等组装成能够进行网络传输的消息体； 
+		3) client stub(消费方代理)找到服务地址，并将消息发送到服务端； 
+		4) server stub(服务方代理)收到消息后进行解码； 
+		5) server stub(服务方代理)根据解码结果调用本地的服务； 
+		6) 本地服务执行并将结果返回给server stub(服务方代理)； 
+		7) server stub(服务方代理)将返回结果打包成消息并发送至消费方； 
+		8) client stub(消费方代理)接收到消息，并进行解码； 
+		9) 服务消费方得到最终结果。
+	2、netty通信框架原理
+		1) 初始化创建boss线程组和worker线程组；													[初始化]
+		2) 服务绑定端口；																		[初始化]
+		3) 初始化服务通道，注册到 boss线程组中的selector(多路复用器) 中；						[boss线程组]
+		4) 监听 accept(接受就绪) 事件；															[boss线程组]
+		5) 监听到 accept(接受就绪) 事件后生成任务队列进行后续操作；								[boss线程组]
+		6) 生成连接通道，注册到 worker线程组中的 selector(多路复用器) 中； 						[worker线程组]
+		7) 监听 read(读就绪)和 write(写就绪) 事件；												[worker线程组]
+		8) 处理 read(读就绪)和 write(写就绪) 事件，生成任务队列进行逻辑操作。					[worker线程组]
+	3、netty底层NIO的原理
+		1) 将请求注册进selector(多路复用器)中
+		2) 由selector(多路复用器)监听四种状态[connect:连接|accept:接受|read:读取|write:写入]的请求连接
+		3) 当监听到任意一种状态将会开启一个线程进行处理
+	4、dubbo原理 -- 框架设计
+		
+
+		
+		
