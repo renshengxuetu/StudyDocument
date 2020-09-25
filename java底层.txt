@@ -53,7 +53,9 @@ CAS
 
 String 类
 	在 main 方法中传递 String 变量到其他方法进行修改，然后在 main 方法中打印，发现值还是没有改变，原因是因为：
-		在 java 中 String 变量每一次赋值都会重新生成一个 String 对象，内存地址会变动。
+		在其他方法形参中的 String 已经是一个新的变量了，当改变形参的值时对 main 方法中的  String 是没有影响的
+	java 中 String 是放在字符串常量池中的，当一个 String 被赋值的时候 java 会先判断这个值在常量池中是否有，如果没有
+	就在常量池中新增一个字符串常量并将 String 的引用指向常量池中新增的字符串常量
 
 集合类				
 	ArrayList
@@ -119,6 +121,7 @@ java volatile 关键字
 	当一个共享变量被 volatile 修饰后，它会保证修改的值会立即被更新到主物理内存，并对其他线程可见。但是这并不意味着volatile 
 	关键字能够保证变量操作的原子性，例如多线程的自增操作每个自增都要经过三步(1、读取主物理内存，2、加1，3、写入主物理内存)
 	，在2,3两步执行完成之前如果有其他线程进来，那么其他线程读取的还是旧的数据。
+	volatile 关键字有禁止指令重排的功能
 	
 高内聚 低耦合是最好的程序设计模式：
 	低耦合：
@@ -801,7 +804,37 @@ java 框架篇
 																								V
 																		DispatcherServlet 将解析后的 view 响应给请求
 	三、redis
-	
+		1、redis 的两种持久化方式
+			1).RDB
+				持久化策略
+					在一定的时间内会另启一个子线程(fork线程)进行数据的持久化工作，先将数据写入到临时文件，当持久化结束
+					之后再用临时文件替换掉上次持久化好的文件
+				优点
+					因为是另启一个线程进行备份，充分利用了多线程的性能，效率较高，而且每次持久化最后只有一份全量数据，
+					相对于 AOF 比较节省磁盘空间
+				缺点
+					当 redis 突然 down 掉之后会丢失一段时间内的数据
+			2).AOF
+				持久化策略
+					使用记录日志的方式将 Redis 每一次写操作记录下来，当 Redis 重启的时候就会根据日志的内容执行之前的每
+					一步写操作来进行数据的还原
+				优点
+					因为是记录日志的方法，当出现问题的时候就可以更好的跟踪每一步操作，及时更正错误，而且不会出现因为意外
+					情况而导致数据的丢失
+				缺点
+					因为要记录每一步，比较耗费硬盘空间和 cpu 性能，而且每次还原都要将之前执行过的写步骤全部执行一步，还
+					原性能较低
+		2、redis 的五种数据类型
+			1).String
+				redis 最基础的数据存储类型，一般用来存放字符串，整数和浮点数
+			2).List
+				由多个字符串组成的有序可重复的列表，是链表结构，所以向列表两端添加元素的时间复杂度为0(1)
+			3).Hash
+				Hash 可以看作是拥有 String key 和 String value 的 map 容器，可以将多个 k-v 键值对存在一个 key 下
+			4).Set
+				无序不重复的集合，优势在于可以进行交集、并集和差集的操作
+			5).ZSet(sorted set)
+				与 Set 的主要区别在于 ZSet 集合的成员都会有一个分数(score)与之关联，redis正是通过分数来为成员进行排序
 	四、Nginx
 	
 数据库
@@ -835,6 +868,45 @@ java 框架篇
 	2、迭代的优缺点
 		优点：执行效率高
 		缺点：代码可读性较差
+		
+Elasticsearch(简称 es) 和 solr 的区别
+	这两个都是企业级高性能的搜索服务器
+	es 更加适合需要实时动态添加数据的查找
+	solr 更加适合传统的不需要实时动态添加的数据的查找
 			
+项目中异常的处理过程
+
+shiro 的拦截器有哪些
+
+spring 提供的主要功能组件和它们的作用
+	1、Beans
+		它是 spring 的核心基础组件，主要由被 IOC 容器托管的实例化 bean 所组成
+	2、Context
+		主要负责管理 bean 与 bean 之后的关系已经 bean 的完整生命周期
+	3、Core
+		它主要提供 spring 实现功能所需要的公共工具
+		
+spring bean 的生命周期
+	
+
+springboot 的自动化配置原理
+	SpringBoot 项目启动类上的 @SpringBootAppliaction 注解里面引入了 @EnableAutoConfiguration 注解
+	@EnableAutoConfiguration 注解里导入了 AutoConfigurationImportSelector 类
+	当执行 SpringApplication.run() 方法的时候会去调用 AutoConfigurationImportSelector 类中的 selectImports 方法
+	该方法会扫描项目 jar 包中 META-INF 下的 spring.factories 文件
+	这个文件有多个，文件里的数据是键值对类型，存放着 spring 需要加载的组件所对应的全类名信息
+	这其中有个 key 为 EnableAutoConfiguration 所对应的多个以 AutoConfiguration 结尾的类是 springboot 完成自动化配置的关键
+	这些配置类都加有 @EnableConfigurationProperties 注解，注解括号里面放着对应的以 Properties 结尾的属性类
+	属性类上的 @ConfigurationProperties 注解的 prefix 属性值对应着 application.yml 等配置文件中配置的 key
+	当然也不是所有的配置类都会被加载，springboot 以五种注解来判断配置类会在什么被加载：
+		1、@ConditionalOnBean : 当容器里有指定的 bean 的条件下
+		2、@ConditionalOnMissingBean: 当容器里不存在指定 bean 的条件下
+		3、@ConditionalOnClass: 当类路径下有指定类的条件下 
+		4、@ConditionalOnMissingClass: 当类路径下不存在指定类的条件下
+		5、@ConditionalOnProperty: 指定的属性是否有指定的值，比如:
+			@ConditionalOnProperty(prefix="xxx.xxx", value="enable", matchIfMissing=true),
+			代表当 xxx.xxx 为 enable 时条件的布尔值为true, 如果没有设置的情况下也为true
+	当配置类被加载后就会被注册进 spring 容器中，成为 spring 容器的组件
+
 待学
 	NIO(非阻塞式)程序
